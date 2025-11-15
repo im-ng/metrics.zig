@@ -1,6 +1,6 @@
 .{
-    .name = .metrics,
+    .name = .metriks,
     .paths = .{""},
     .version = "0.0.0",
-    .fingerprint = 0x228aaae778b8b15b,
+    .fingerprint = 0xea5320efd178aeb2,
 }
