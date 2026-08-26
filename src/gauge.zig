@@ -1,4 +1,5 @@
 const std = @import("std");
+const io = @import("io.zig");
 const Allocator = std.mem.Allocator;
 
 const m = @import("metric.zig");
@@ -148,7 +149,7 @@ pub fn GaugeVec(comptime V: type, comptime L: type) type {
             vec: MetricVec(L),
             preamble: []const u8,
             allocator: Allocator,
-            lock: std.Thread.RwLock,
+            lock: std.Io.RwLock,
             values: MetricVec(L).HashMap(Value),
 
             const Value = struct {
@@ -158,7 +159,7 @@ pub fn GaugeVec(comptime V: type, comptime L: type) type {
 
             pub fn init(allocator: Allocator, comptime name: []const u8, comptime opts: Opts) !Impl {
                 return .{
-                    .lock = .{},
+                    .lock = .init,
                     .allocator = allocator,
                     .vec = try MetricVec(L).init(name),
                     .values = MetricVec(L).HashMap(Value){},
@@ -207,8 +208,8 @@ pub fn GaugeVec(comptime V: type, comptime L: type) type {
 
             pub fn remove(self: *Impl, labels: L) void {
                 const kv = blk: {
-                    self.lock.lock();
-                    defer self.lock.unlock();
+                    self.lock.lock(io.io) catch {};
+                    defer self.lock.unlock(io.io);
                     break :blk self.values.fetchRemove(labels) orelse return;
                 };
 
@@ -222,8 +223,8 @@ pub fn GaugeVec(comptime V: type, comptime L: type) type {
 
                 const name = self.vec.name;
 
-                self.lock.lockShared();
-                defer self.lock.unlockShared();
+                self.lock.lockShared(io.io) catch {};
+                defer self.lock.unlockShared(io.io);
 
                 var it = self.values.iterator();
                 while (it.next()) |kv| {
@@ -245,8 +246,8 @@ pub fn GaugeVec(comptime V: type, comptime L: type) type {
                 const allocator = self.allocator;
 
                 {
-                    self.lock.lockShared();
-                    defer self.lock.unlockShared();
+                    self.lock.lockShared(io.io) catch {};
+                    defer self.lock.unlockShared(io.io);
                     if (self.values.getPtr(labels)) |existing| {
                         fa(value, existing);
                         return;
@@ -267,8 +268,8 @@ pub fn GaugeVec(comptime V: type, comptime L: type) type {
                     .attributes = attributes,
                 };
 
-                self.lock.lock();
-                defer self.lock.unlock();
+                self.lock.lock(io.io) catch {};
+                defer self.lock.unlock(io.io);
 
                 const gop = try self.values.getOrPut(allocator, owned_labels);
                 if (gop.found_existing) {

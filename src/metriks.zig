@@ -1,5 +1,9 @@
 const std = @import("std");
 
+pub fn setIo(i: std.Io) void {
+    @import("io.zig").io = i;
+}
+
 const counter = @import("counter.zig");
 pub const Counter = counter.Counter;
 pub const CounterVec = counter.CounterVec;
