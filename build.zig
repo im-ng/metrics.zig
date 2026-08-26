@@ -4,7 +4,7 @@ pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const metrics_module = b.addModule("metriks", .{
+    const metrics_module = b.addModule("metrics", .{
         .root_source_file = b.path("src/metriks.zig"),
         .target = target,
         .optimize = optimize,
